@@ -33,7 +33,7 @@ describe("SlotBooking", () => {
     });
   });
 
-  it("books a slot and refreshes list", async () => {
+  it("books a slot with guest name and refreshes list", async () => {
     const user = userEvent.setup();
 
     const fetchMock = vi
@@ -44,7 +44,10 @@ describe("SlotBooking", () => {
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ slot: sampleSlots[0] }),
+        json: async () => ({
+          slot: sampleSlots[0],
+          guestName: "Test Person",
+        }),
       })
       .mockResolvedValueOnce({
         ok: true,
@@ -59,6 +62,7 @@ describe("SlotBooking", () => {
       expect(screen.getByRole("button", { name: /book/i })).toBeInTheDocument();
     });
 
+    await user.type(screen.getByLabelText(/navn/i), "Test Person");
     await user.click(screen.getByRole("button", { name: /^book$/i }));
 
     await waitFor(() => {
@@ -66,7 +70,10 @@ describe("SlotBooking", () => {
         "/api/slots",
         expect.objectContaining({
           method: "POST",
-          body: JSON.stringify({ slotId: "slot-1" }),
+          body: JSON.stringify({
+            slotId: "slot-1",
+            guestName: "Test Person",
+          }),
         }),
       );
     });

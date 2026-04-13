@@ -1,45 +1,45 @@
 # QuickSlot
 
-Mini bookingsystem bygget med **Next.js** (App Router), **TypeScript** og **Tailwind**. Formålet er at demonstrere **GitHub** (PR’er, branches), **CI** (lint, test, build) og **deploy** (fx **Railway**).
+Mini bookingsystem med **Next.js** (App Router), **TypeScript**, **Tailwind**, **shadcn/ui**, **Framer Motion**, **Prisma** og **PostgreSQL** på **Railway**. Demonstrerer **GitHub** (PR’er, branches), **CI** og **CD**.
 
 ## Funktioner
 
-- Viser **ledige tidsrum** (30 minutter) fra en **in-memory** butik (nulstilles ved deploy/genstart på Railway).
-- **Book** et slot via `POST /api/slots` med `{ "slotId": "..." }`.
-- **UI** med loading-, fejl- og tom tilstand.
+- **PostgreSQL** — slots og bookinger gemmes i databasen (overlever deploys).
+- **Book med navn** — `POST /api/slots` med `slotId` og `guestName`.
+- **UI** — design tokens, kort, faner pr. dag, toast-bekræftelse, diskrete animationer.
 
 ## Kommandoer
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000
+cp .env.example .env   # sæt DATABASE_URL fra Railway (Postgres → DATABASE_PUBLIC_URL lokalt)
+npm run dev              # http://localhost:3000
 npm run lint
 npm run test
 npm run build
-npm start        # production (bruges på Railway)
+npm run db:seed          # efter migrate (valgfrit)
+npm start                # production; på Railway kører Procfile migrate + start
 ```
 
 ## A–Z: fra repo til live
 
-1. **skills.sh** — Se [docs/SKILLS.md](./docs/SKILLS.md) for hvilke agent-skills der er valgt til projektet.
-2. **GitHub** — Push til `main`; CI kører på hver PR og push til `main` (`.github/workflows/ci.yml`).
-3. **Railway** — Se [docs/RAILWAY.md](./docs/RAILWAY.md) for trin-for-trin (GitHub-integration, build/start, `PORT`). Kort: **Deploy from GitHub** → dette repo → branch `main` → åbn den **public URL** Railway giver.
-4. Valgfrit: **Branch protection** på `main` (Settings → Branches): kræv at workflow **CI** er grøn før merge.
+1. **skills.sh** — [docs/SKILLS.md](./docs/SKILLS.md), [docs/SKILLS_EXTENSIONS.md](./docs/SKILLS_EXTENSIONS.md).
+2. **GitHub** — CI på PR/push til `main` (`.github/workflows/ci.yml`).
+3. **Railway** — [docs/RAILWAY.md](./docs/RAILWAY.md): Postgres + `DATABASE_URL` på app-servicen, **Procfile** kører `prisma migrate deploy` ved start.
+4. Valgfrit: **Branch protection** på `main`.
 
 ## API
 
-| Metode | Sti           | Beskrivelse                          |
-|--------|---------------|--------------------------------------|
-| `GET`  | `/api/slots`  | Liste over ledige slots (JSON)       |
-| `POST` | `/api/slots`  | Body: `{ "slotId": string }` — book  |
+| Metode | Sti           | Beskrivelse                                                |
+|--------|---------------|------------------------------------------------------------|
+| `GET`  | `/api/slots`  | Ledige slots (uden booking)                                |
+| `POST` | `/api/slots`  | Body: `{ "slotId": string, "guestName": string }` — book   |
 
 Fejl: `400` (ugyldig body / tid i fortiden), `404` (ukendt id), `409` (allerede booket).
 
 ## CI
 
 ![CI](https://github.com/eskoubar95/quickslot/actions/workflows/ci.yml/badge.svg)
-
-*(Badge forudsætter at repo hedder `eskoubar95/quickslot` — ret bruger/repo i URL hvis dit navn er anderledes.)*
 
 ## Licens
 
