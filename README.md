@@ -46,3 +46,7 @@ Fejl: `400` (ugyldig body / tid i fortiden), `404` (ukendt id), `409` (allerede 
 ## Licens
 
 Privat / kursusprojekt.
+
+## Pull requests
+
+Brug feature branches og åbn PR mod `main`; CI skal være grøn før merge.
