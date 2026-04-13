@@ -23,10 +23,8 @@ npm start        # production (bruges på Railway)
 
 1. **skills.sh** — Se [docs/SKILLS.md](./docs/SKILLS.md) for hvilke agent-skills der er valgt til projektet.
 2. **GitHub** — Push til `main`; CI kører på hver PR og push til `main` (`.github/workflows/ci.yml`).
-3. **Railway** — Opret projekt → **Deploy from GitHub** → vælg dette repo → production branch `main`.  
-   - **Build:** `npm run build` (Nixpacks detekterer Node).  
-   - **Start:** `npm start` eller ved behov `npx next start -p $PORT` så `PORT` fra Railway bruges.  
-4. Verificér **public URL** efter deploy.
+3. **Railway** — Se [docs/RAILWAY.md](./docs/RAILWAY.md) for trin-for-trin (GitHub-integration, build/start, `PORT`). Kort: **Deploy from GitHub** → dette repo → branch `main` → åbn den **public URL** Railway giver.
+4. Valgfrit: **Branch protection** på `main` (Settings → Branches): kræv at workflow **CI** er grøn før merge.
 
 ## API
 
