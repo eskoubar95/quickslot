@@ -1,66 +1,74 @@
+import type { Slot as PrismaSlot } from "@prisma/client";
+import { prisma } from "@/lib/db";
+
 export type Slot = {
   id: string;
   start: string;
   end: string;
 };
 
-type Store = {
-  slots: Slot[];
-  booked: Set<string>;
-};
-
-function createInitialStore(): Store {
-  const slots: Slot[] = [];
-  const base = new Date();
-  base.setHours(9, 0, 0, 0);
-  base.setMinutes(0, 0, 0);
-
-  for (let i = 0; i < 6; i++) {
-    const start = new Date(base);
-    start.setDate(start.getDate() + Math.floor(i / 3));
-    start.setHours(9 + (i % 3) * 2, 0, 0, 0);
-    const end = new Date(start);
-    end.setMinutes(end.getMinutes() + 30);
-    slots.push({
-      id: `slot-${i + 1}`,
-      start: start.toISOString(),
-      end: end.toISOString(),
-    });
-  }
-
-  return { slots, booked: new Set() };
+function toApiSlot(row: PrismaSlot): Slot {
+  return {
+    id: row.id,
+    start: row.start.toISOString(),
+    end: row.end.toISOString(),
+  };
 }
 
-let store: Store = createInitialStore();
-
-export function resetStoreForTests(): void {
-  store = createInitialStore();
-}
-
-export function getAvailableSlots(now: Date = new Date()): Slot[] {
-  return store.slots.filter(
-    (s) =>
-      !store.booked.has(s.id) && new Date(s.start).getTime() >= now.getTime(),
-  );
+export async function getAvailableSlots(now: Date = new Date()): Promise<Slot[]> {
+  const rows = await prisma.slot.findMany({
+    where: {
+      start: { gte: now },
+      booking: null,
+    },
+    orderBy: { start: "asc" },
+  });
+  return rows.map(toApiSlot);
 }
 
 export type BookError = "NOT_FOUND" | "ALREADY_BOOKED" | "PAST_SLOT";
 
 export type BookResult =
-  | { ok: true; slot: Slot }
+  | { ok: true; slot: Slot; guestName: string }
   | { ok: false; error: BookError };
 
-export function bookSlot(id: string, now: Date = new Date()): BookResult {
-  const slot = store.slots.find((s) => s.id === id);
-  if (!slot) {
-    return { ok: false, error: "NOT_FOUND" };
-  }
-  if (new Date(slot.start).getTime() < now.getTime()) {
-    return { ok: false, error: "PAST_SLOT" };
-  }
-  if (store.booked.has(id)) {
-    return { ok: false, error: "ALREADY_BOOKED" };
-  }
-  store.booked.add(id);
-  return { ok: true, slot };
+export async function bookSlot(
+  id: string,
+  guestName: string,
+  now: Date = new Date(),
+): Promise<BookResult> {
+  return prisma.$transaction(async (tx) => {
+    const slot = await tx.slot.findUnique({
+      where: { id },
+      include: { booking: true },
+    });
+
+    if (!slot) {
+      return { ok: false, error: "NOT_FOUND" };
+    }
+    if (slot.start.getTime() < now.getTime()) {
+      return { ok: false, error: "PAST_SLOT" };
+    }
+    if (slot.booking) {
+      return { ok: false, error: "ALREADY_BOOKED" };
+    }
+
+    await tx.booking.create({
+      data: {
+        slotId: slot.id,
+        guestName: guestName.trim(),
+      },
+    });
+
+    return {
+      ok: true,
+      slot: toApiSlot(slot),
+      guestName: guestName.trim(),
+    };
+  });
+}
+
+/** Kun til tests: nulstil ikke længere in-memory; behold for bagudkompatibilitet som no-op. */
+export function resetStoreForTests(): void {
+  /* in-memory fjernet — brug mocked Prisma i tests */
 }

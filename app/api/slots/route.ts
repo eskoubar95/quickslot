@@ -3,12 +3,13 @@ import { z } from "zod";
 import { bookSlot, getAvailableSlots } from "@/lib/slots";
 
 export async function GET() {
-  const slots = getAvailableSlots();
+  const slots = await getAvailableSlots();
   return NextResponse.json({ slots });
 }
 
 const bodySchema = z.object({
   slotId: z.string().min(1),
+  guestName: z.string().min(1).max(120),
 });
 
 export async function POST(request: Request) {
@@ -27,7 +28,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = bookSlot(parsed.data.slotId);
+  const result = await bookSlot(
+    parsed.data.slotId,
+    parsed.data.guestName,
+  );
   if (!result.ok) {
     const status =
       result.error === "NOT_FOUND"
@@ -38,5 +42,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status });
   }
 
-  return NextResponse.json({ slot: result.slot });
+  return NextResponse.json({
+    slot: result.slot,
+    guestName: result.guestName,
+  });
 }
