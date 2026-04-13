@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# QuickSlot
 
-## Getting Started
+Mini bookingsystem bygget med **Next.js** (App Router), **TypeScript** og **Tailwind**. Formålet er at demonstrere **GitHub** (PR’er, branches), **CI** (lint, test, build) og **deploy** (fx **Railway**).
 
-First, run the development server:
+## Funktioner
+
+- Viser **ledige tidsrum** (30 minutter) fra en **in-memory** butik (nulstilles ved deploy/genstart på Railway).
+- **Book** et slot via `POST /api/slots` med `{ "slotId": "..." }`.
+- **UI** med loading-, fejl- og tom tilstand.
+
+## Kommandoer
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
+npm run lint
+npm run test
+npm run build
+npm start        # production (bruges på Railway)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## A–Z: fra repo til live
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **skills.sh** — Se [docs/SKILLS.md](./docs/SKILLS.md) for hvilke agent-skills der er valgt til projektet.
+2. **GitHub** — Push til `main`; CI kører på hver PR og push til `main` (`.github/workflows/ci.yml`).
+3. **Railway** — Opret projekt → **Deploy from GitHub** → vælg dette repo → production branch `main`.  
+   - **Build:** `npm run build` (Nixpacks detekterer Node).  
+   - **Start:** `npm start` eller ved behov `npx next start -p $PORT` så `PORT` fra Railway bruges.  
+4. Verificér **public URL** efter deploy.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API
 
-## Learn More
+| Metode | Sti           | Beskrivelse                          |
+|--------|---------------|--------------------------------------|
+| `GET`  | `/api/slots`  | Liste over ledige slots (JSON)       |
+| `POST` | `/api/slots`  | Body: `{ "slotId": string }` — book  |
 
-To learn more about Next.js, take a look at the following resources:
+Fejl: `400` (ugyldig body / tid i fortiden), `404` (ukendt id), `409` (allerede booket).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## CI
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+![CI](https://github.com/eskoubar95/quickslot/actions/workflows/ci.yml/badge.svg)
 
-## Deploy on Vercel
+*(Badge forudsætter at repo hedder `eskoubar95/quickslot` — ret bruger/repo i URL hvis dit navn er anderledes.)*
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Licens
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Privat / kursusprojekt.
